@@ -77,7 +77,7 @@ class _EditProfilScreenState extends State<EditProfilScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 254, 67, 201),
+      backgroundColor: const Color(0xFF3B3DBF),
       body: SafeArea(
         child: Stack(
           children: [
