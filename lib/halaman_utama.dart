@@ -49,7 +49,7 @@ class HalamanUtama extends StatelessWidget {
               MaterialPageRoute(builder: (context) => const HalamanGrafik()));
           } else if (index == 2) {
             Navigator.push(context,
-              MaterialPageRoute(builder: (context) => const HalamanProfil()));
+              MaterialPageRoute(builder: (context) => const ProfilScreen()));
           }
         },
       ),
