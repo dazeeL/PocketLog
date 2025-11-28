@@ -10,7 +10,7 @@ class ProfilScreen extends StatefulWidget {
 }
 
 class _ProfilScreenState extends State<ProfilScreen> {
-  String nama = "Kim Mingyu";
+  String nama = "Sheren Dian";
   String username = "babai";
   String email = "mingyukim@gmail.com";
   String password = "mingming";
