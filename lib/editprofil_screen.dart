@@ -77,7 +77,7 @@ class _EditProfilScreenState extends State<EditProfilScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF3B3DBF),
+      backgroundColor: const Color.fromRGBO(240, 98, 146, 1),
       body: SafeArea(
         child: Stack(
           children: [
@@ -166,24 +166,27 @@ class _EditProfilScreenState extends State<EditProfilScreen> {
                         vertical: 14,
                       ),
                     ),
-                    child: const Text("Cancel"),
+                    child: const Text("Cancel",
+                    
+                    ),
                   ),
                   ElevatedButton(
                     onPressed: () {
-                      widget.onSave(
-                        namaController.text,
-                        emailController.text,
-                        usernameController.text,
-                        passwordController.text,
-                      );
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => const ProfilScreen()),
-                      );
-                    },
+  widget.onSave(
+    namaController.text,
+    emailController.text,
+    usernameController.text,
+    passwordController.text,
+  );
+  Navigator.pop(context); // balik, bukan push
+
+},
+
+
+
                     style: ElevatedButton.styleFrom(
                       backgroundColor:
-                          const Color.fromARGB(255, 1, 184, 71),
+                          const Color.fromARGB(255, 248, 126, 167),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
@@ -226,7 +229,7 @@ class _EditProfilScreenState extends State<EditProfilScreen> {
           style: const TextStyle(color: Colors.white),
           decoration: InputDecoration(
             filled: true,
-            fillColor: const Color(0xFF5C5FE0),
+            fillColor: const Color.fromARGB(255, 248, 126, 167),
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             border: OutlineInputBorder(
