@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/halaman_daftar.dart';
 import 'package:flutter_application_1/halaman_login.dart';
 import 'package:flutter_application_1/halaman_pengingat.dart';
 import 'editprofil_screen.dart';
@@ -52,7 +53,7 @@ class PocketLogApp extends StatelessWidget {
         ),
       ),
 
-      home: const HalamanPengingat(),
+      home: const HalamanDaftar(),
     );
   }
 }
