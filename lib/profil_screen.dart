@@ -65,12 +65,12 @@ class _ProfilScreenState extends State<ProfilScreen> {
 
       body: Stack(
         children: [
-          // 🟦 background biru atas
+          
           Container(
             height: 230,
             width: double.infinity,
             decoration: const BoxDecoration(
-              color: Color(0xFF002E9D),
+              color: Color.fromARGB(255, 243, 56, 171),
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(30),
                 bottomRight: Radius.circular(30),
