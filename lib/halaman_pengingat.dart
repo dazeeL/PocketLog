@@ -1,119 +1,175 @@
 import 'package:flutter/material.dart';
 import 'halaman_tambah_pengingat.dart';
 
-class HalamanPengingat extends StatelessWidget {
+class HalamanPengingat extends StatefulWidget {
   const HalamanPengingat({super.key});
+
+  @override
+  State<HalamanPengingat> createState() => _HalamanPengingatState();
+}
+
+class _HalamanPengingatState extends State<HalamanPengingat> {
+  bool contohChecked = false;
+
+  final Color primaryColor = const Color(0xFFFF5DA2);
+  final Color bgColor = const Color(0xFFFFF7FB);
+  final Color cardColor = Colors.white;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: bgColor,
 
-      // === HEADER TANPA APPBAR (sesuai wireframe) ===
-      body: Column(
-        children: [
-          const SizedBox(height: 40),
+      // ================= BODY =================
+      body: SafeArea(
+        child: Column(
+          children: [
+            const SizedBox(height: 16),
 
-          // Row: Icon kiri + Judul + Icon profil
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const [
-                Icon(Icons.circle, size: 40), // Dummy icon kiri sesuai sketsa
-                Text(
-                  "Pengingat",
-                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-                ),
-                Icon(Icons.person, size: 40),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // === CONTAINER FORM KECIL (Nama tagihan, Jumlah, Tanggal) ===
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.black),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text("Nama tagihan"),
-                  SizedBox(height: 6),
-                  Text("Jumlah"),
-                  SizedBox(height: 6),
-                  Text("Tanggal"),
+            // ================= HEADER =================
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  const Text(
+                    "Pengingat",
+                    style: TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Spacer(),
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundColor: primaryColor.withOpacity(0.2),
+                    child: Icon(Icons.person, color: primaryColor),
+                  ),
                 ],
               ),
             ),
-          ),
 
-          const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
-          // === LIST ITEM PENGINGAT ===
-          Expanded(
-            child: ListView(
+            // ================= CONTOH FORM CARD =================
+            Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  margin: const EdgeInsets.only(bottom: 15),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.black),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Info tagihan
-                      Column(
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: _cardDecoration(),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: const [
-                          Text("Listrik Kontrakan",
-                              style: TextStyle(fontSize: 16)),
-                          SizedBox(height: 4),
-                          Text("Rp 200.000"),
-                          Text("28 April 2025"),
+                          Text(
+                            "Nama Tagihan",
+                            style: TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          SizedBox(height: 6),
+                          Text("Jumlah"),
+                          SizedBox(height: 6),
+                          Text("Tanggal"),
                         ],
                       ),
-                      // Checkbox kosong
-                      const Icon(Icons.check_box_outline_blank),
-                    ],
-                  ),
+                    ),
+                    Checkbox(
+                      value: contohChecked,
+                      activeColor: primaryColor,
+                      onChanged: (value) {
+                        setState(() => contohChecked = value!);
+                      },
+                    )
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-        ],
+
+            const SizedBox(height: 20),
+
+            // ================= LIST PENGINGAT =================
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                children: [
+                  _pengingatItem(
+                    title: "Listrik Kontrakan",
+                    amount: "Rp 200.000",
+                    date: "28 April 2025",
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
 
-      // === FLOATING BUTTON TAMBAH (+) ===
+      // ================= FAB =================
       floatingActionButton: FloatingActionButton(
+        backgroundColor: primaryColor,
         onPressed: () {
           Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => const HalamanTambahPengingat()),
+              builder: (context) => const HalamanTambahPengingat(),
+            ),
           );
         },
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.add, size: 28),
       ),
+    );
+  }
 
-      // === BOTTOM NAVIGATION (sesuai sketsa) ===
-      bottomNavigationBar: BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: ""),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications), label: ""),
-          BottomNavigationBarItem(icon: Icon(Icons.add_box), label: ""),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: ""),
+  // ================= ITEM PENGINGAT =================
+  Widget _pengingatItem({
+    required String title,
+    required String amount,
+    required String date,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 14),
+      decoration: _cardDecoration(),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(amount),
+                Text(date),
+              ],
+            ),
+          ),
+          Icon(
+            Icons.check_box_outline_blank,
+            color: primaryColor,
+          )
         ],
       ),
+    );
+  }
+
+  // ================= CARD DECORATION =================
+  BoxDecoration _cardDecoration() {
+    return BoxDecoration(
+      color: cardColor,
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.06),
+          blurRadius: 10,
+          offset: const Offset(0, 4),
+        ),
+      ],
     );
   }
 }

@@ -10,7 +10,7 @@ class ProfilScreen extends StatefulWidget {
 }
 
 class _ProfilScreenState extends State<ProfilScreen> {
-  String nama = "Sheren Dian";
+  String nama = "Liuna";
   String username = "babai";
   String email = "mingyukim@gmail.com";
   String password = "mingming";
@@ -65,12 +65,12 @@ class _ProfilScreenState extends State<ProfilScreen> {
 
       body: Stack(
         children: [
-          // 🟦 background biru atas
+          
           Container(
             height: 230,
             width: double.infinity,
             decoration: const BoxDecoration(
-              color: Color(0xFF002E9D),
+              color: Color.fromARGB(255, 243, 56, 171),
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(30),
                 bottomRight: Radius.circular(30),
