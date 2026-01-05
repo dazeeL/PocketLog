@@ -34,7 +34,7 @@ class HalamanGrafik extends StatelessWidget {
                       PieChartSectionData(
                         value: 50,
                         color: Colors.redAccent,
-                        title: '50%',
+                        title: '',
                         radius: 75,
                         titleStyle: const TextStyle(
                           color: Colors.white,
@@ -44,7 +44,7 @@ class HalamanGrafik extends StatelessWidget {
                       PieChartSectionData(
                         value: 30,
                         color: Colors.orangeAccent,
-                        title: '30%',
+                        title: '',
                         radius: 70,
                         titleStyle: const TextStyle(
                           color: Colors.white,
@@ -54,7 +54,7 @@ class HalamanGrafik extends StatelessWidget {
                       PieChartSectionData(
                         value: 20,
                         color: Colors.blueAccent,
-                        title: '20%',
+                        title: '',
                         radius: 65,
                         titleStyle: const TextStyle(
                           color: Colors.white,
@@ -73,9 +73,9 @@ class HalamanGrafik extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   children: const [
-                    LegendItem(color: Colors.redAccent, text: "Makan • 50%"),
-                    LegendItem(color: Colors.orangeAccent, text: "Transport • 30%"),
-                    LegendItem(color: Colors.blueAccent, text: "Belanja • 20%"),
+                    LegendItem(color: Colors.redAccent, text: " • "),
+                    LegendItem(color: Colors.orangeAccent, text: " • "),
+                    LegendItem(color: Colors.blueAccent, text: " • "),
                   ],
                 ),
               ),
