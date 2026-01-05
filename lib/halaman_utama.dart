@@ -17,6 +17,11 @@ class _HalamanUtamaState extends State<HalamanUtama> {
 
   int _currentIndex = 0;
 
+  // ===== DATA UANG =====
+  int saldo = 0;
+  int totalPemasukan = 0;
+  int totalPengeluaran = 0;
+
   @override
   Widget build(BuildContext context) {
     final pages = [
@@ -80,9 +85,12 @@ class _HalamanUtamaState extends State<HalamanUtama> {
 
           const Text("Saldo Saat Ini", style: TextStyle(color: Colors.grey)),
           const SizedBox(height: 6),
-          const Text(
-            "Rp 300.000",
-            style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+          Text(
+            "Rp $saldo",
+            style: const TextStyle(
+              fontSize: 30,
+              fontWeight: FontWeight.bold,
+            ),
           ),
 
           const SizedBox(height: 24),
@@ -104,10 +112,9 @@ class _HalamanUtamaState extends State<HalamanUtama> {
 
           const SizedBox(height: 32),
 
-          // ===== GRAFIK (FIX INFINITE SIZE) =====
           SizedBox(
-            height: 260, // WAJIB ada height
-            child: HalamanGrafik(), // grafik sama persis
+            height: 260,
+            child: HalamanGrafik(),
           ),
         ],
       ),
@@ -130,21 +137,28 @@ class _HalamanUtamaState extends State<HalamanUtama> {
             const Text("Pemasukan",
                 style: TextStyle(fontSize: 12, color: Colors.grey)),
             const SizedBox(height: 4),
-            const Text(
-              "Rp 50.000",
-              style: TextStyle(fontWeight: FontWeight.bold),
+            Text(
+              "Rp $totalPemasukan",
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             Align(
               alignment: Alignment.bottomRight,
               child: InkWell(
-                onTap: () {
-                  Navigator.push(
+                onTap: () async {
+                  final result = await Navigator.push<int>(
                     context,
                     MaterialPageRoute(
                       builder: (_) => const HalamanTambahPemasukan(),
                     ),
                   );
+
+                  if (result != null) {
+                    setState(() {
+                      totalPemasukan += result;
+                      saldo += result;
+                    });
+                  }
                 },
                 child: Container(
                   width: 36,
@@ -173,15 +187,15 @@ class _HalamanUtamaState extends State<HalamanUtama> {
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Icon(Icons.arrow_upward, color: Colors.red),
-            SizedBox(height: 6),
-            Text("Pengeluaran",
+          children: [
+            const Icon(Icons.arrow_upward, color: Colors.red),
+            const SizedBox(height: 6),
+            const Text("Pengeluaran",
                 style: TextStyle(fontSize: 12, color: Colors.grey)),
-            SizedBox(height: 4),
+            const SizedBox(height: 4),
             Text(
-              "Rp 200.000",
-              style: TextStyle(fontWeight: FontWeight.bold),
+              "Rp $totalPengeluaran",
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ],
         ),

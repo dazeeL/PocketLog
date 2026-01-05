@@ -38,7 +38,7 @@ class HalamanAwal extends StatelessWidget {
                   borderRadius: BorderRadius.circular(28),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
+                      color: const Color.fromARGB(255, 255, 51, 163).withOpacity(0.08),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
