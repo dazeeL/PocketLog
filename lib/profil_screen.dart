@@ -10,10 +10,10 @@ class ProfilScreen extends StatefulWidget {
 }
 
 class _ProfilScreenState extends State<ProfilScreen> {
-  String nama = "Liuna";
-  String username = "babai";
-  String email = "mingyukim@gmail.com";
-  String password = "mingming";
+  String nama = "";
+  String username = "";
+  String email = "";
+  String password = "";
 
   @override
   Widget build(BuildContext context) {

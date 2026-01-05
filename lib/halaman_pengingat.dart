@@ -50,7 +50,7 @@ class _HalamanPengingatState extends State<HalamanPengingat> {
 
             const SizedBox(height: 24),
 
-            // ================= CONTOH FORM CARD =================
+            // ================= CONTOH CARD (SATU-SATUNYA) =================
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Container(
@@ -84,22 +84,6 @@ class _HalamanPengingatState extends State<HalamanPengingat> {
                 ),
               ),
             ),
-
-            const SizedBox(height: 20),
-
-            // ================= LIST PENGINGAT =================
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                children: [
-                  _pengingatItem(
-                    title: "Listrik Kontrakan",
-                    amount: "Rp 200.000",
-                    date: "28 April 2025",
-                  ),
-                ],
-              ),
-            ),
           ],
         ),
       ),
@@ -116,44 +100,6 @@ class _HalamanPengingatState extends State<HalamanPengingat> {
           );
         },
         child: const Icon(Icons.add, size: 28),
-      ),
-    );
-  }
-
-  // ================= ITEM PENGINGAT =================
-  Widget _pengingatItem({
-    required String title,
-    required String amount,
-    required String date,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      margin: const EdgeInsets.only(bottom: 14),
-      decoration: _cardDecoration(),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(amount),
-                Text(date),
-              ],
-            ),
-          ),
-          Icon(
-            Icons.check_box_outline_blank,
-            color: primaryColor,
-          )
-        ],
       ),
     );
   }

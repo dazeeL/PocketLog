@@ -162,11 +162,13 @@ class _HalamanTambahPemasukanState extends State<HalamanTambahPemasukan> {
                   children: [
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: () {
-                          if (_formKey.currentState!.validate()) {
-                            Navigator.pop(context);
-                          }
-                        },
+                       onPressed: () {
+  if (_formKey.currentState!.validate()) {
+    final jumlah = int.parse(jumlahController.text);
+    Navigator.pop(context, jumlah); // ⬅️ KIRIM NILAI
+  }
+},
+
                         style: ElevatedButton.styleFrom(
                           backgroundColor: primaryColor,
                           padding:

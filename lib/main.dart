@@ -1,13 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/halaman_awal.dart';
-import 'package:flutter_application_1/halaman_daftar.dart';
-import 'package:flutter_application_1/halaman_login.dart';
-import 'package:flutter_application_1/halaman_pengingat.dart';
-import 'package:flutter_application_1/halaman_tambah_pemasukan.dart';
-import 'package:flutter_application_1/halaman_tambah_transaksi.dart';
-import 'package:flutter_application_1/halaman_utama.dart';
-import 'editprofil_screen.dart';
-import 'profil_screen.dart';
+import 'halaman_utama.dart'; 
 
 void main() {
   runApp(const PocketLogApp());

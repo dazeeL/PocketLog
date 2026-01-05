@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'profil_screen.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:typed_data';
+import 'package:image_picker/image_picker.dart'; 
 import 'package:flutter/foundation.dart'; // buat kIsWeb
 
 class EditProfilScreen extends StatefulWidget {
@@ -106,7 +105,7 @@ class _EditProfilScreenState extends State<EditProfilScreen> {
                               ? MemoryImage(_webImage!)
                               : _pickedFile != null
                                   ? Image.network(_pickedFile!.path).image
-                                  : const AssetImage('asset/mingyu.jpeg')
+                                  : const AssetImage('asset/')
                                       as ImageProvider,
                         ),
                         GestureDetector(
