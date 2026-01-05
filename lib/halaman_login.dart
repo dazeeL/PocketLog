@@ -1,15 +1,61 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'halaman_utama.dart';
 import 'halaman_daftar.dart';
 
-class HalamanLogin extends StatelessWidget {
+class HalamanLogin extends StatefulWidget {
   const HalamanLogin({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final emailController = TextEditingController();
-    final passwordController = TextEditingController();
+  State<HalamanLogin> createState() => _HalamanLoginState();
+}
 
+class _HalamanLoginState extends State<HalamanLogin> {
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+
+  bool isLoading = false;
+
+  Future<void> _login() async {
+    if (emailController.text.isEmpty || passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Email dan password wajib diisi")),
+      );
+      return;
+    }
+
+    setState(() => isLoading = true);
+
+    try {
+      final response =
+          await Supabase.instance.client.auth.signInWithPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
+
+      if (response.session != null) {
+        // LOGIN BERHASIL
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const HalamanUtama()),
+        );
+      }
+    } on AuthException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message)),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Terjadi kesalahan")),
+      );
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -20,7 +66,6 @@ class HalamanLogin extends StatelessWidget {
               children: [
                 const SizedBox(height: 30),
 
-                // ===== TITLE =====
                 const Text(
                   "Pocket Log",
                   style: TextStyle(
@@ -32,7 +77,6 @@ class HalamanLogin extends StatelessWidget {
 
                 const SizedBox(height: 30),
 
-                // ===== LOGO =====
                 Image.asset(
                   "asset/logo.png",
                   height: 170,
@@ -40,7 +84,6 @@ class HalamanLogin extends StatelessWidget {
 
                 const SizedBox(height: 30),
 
-                // ===== EMAIL =====
                 _inputField(
                   controller: emailController,
                   hint: "Email",
@@ -49,7 +92,6 @@ class HalamanLogin extends StatelessWidget {
 
                 const SizedBox(height: 14),
 
-                // ===== PASSWORD =====
                 _inputField(
                   controller: passwordController,
                   hint: "Password",
@@ -57,101 +99,34 @@ class HalamanLogin extends StatelessWidget {
                   obscure: true,
                 ),
 
-                const SizedBox(height: 10),
+                const SizedBox(height: 20),
 
-                // ===== LUPA PASSWORD =====
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {},
-                    child: const Text(
-                      "Lupa Password ?",
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 10),
-
-                // ===== BUTTON MASUK =====
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      // VALIDASI SEDERHANA
-                      if (emailController.text.isEmpty ||
-                          passwordController.text.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Email dan password wajib diisi"),
+                    onPressed: isLoading ? null : _login,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFF9B25A),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child: isLoading
+                        ? const CircularProgressIndicator(color: Colors.black)
+                        : const Text(
+                            "Masuk",
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        );
-                        return;
-                      }
-
-                      // NANTI: LOGIN SUPABASE DI SINI
-
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const HalamanUtama(),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFF9B25A),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                    child: const Text(
-                      "Masuk",
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 14),
-
-                // ===== GOOGLE =====
-                const Text(
-                  "atau masuk lewat google",
-                  style: TextStyle(color: Colors.grey),
-                ),
-
-                const SizedBox(height: 12),
-
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // NANTI: GOOGLE SIGN IN
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFF9B25A),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                    child: const Text(
-                      "Google",
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
                   ),
                 ),
 
                 const SizedBox(height: 25),
 
-                // ===== DAFTAR =====
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -161,7 +136,7 @@ class HalamanLogin extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const HalamanDaftar(),
+                            builder: (_) => const HalamanDaftar(),
                           ),
                         );
                       },
@@ -185,7 +160,6 @@ class HalamanLogin extends StatelessWidget {
     );
   }
 
-  // ===== INPUT FIELD =====
   Widget _inputField({
     required TextEditingController controller,
     required String hint,

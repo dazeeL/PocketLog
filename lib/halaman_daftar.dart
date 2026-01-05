@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'halaman_login.dart';
 
 class HalamanDaftar extends StatefulWidget {
@@ -11,22 +12,74 @@ class HalamanDaftar extends StatefulWidget {
 }
 
 class _HalamanDaftarState extends State<HalamanDaftar> {
+  final supabase = Supabase.instance.client;
+
   final namaController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
   File? _image;
   final ImagePicker _picker = ImagePicker();
+  bool _loading = false;
 
   Future<void> _pickImage() async {
-    final XFile? picked =
-        await _picker.pickImage(source: ImageSource.gallery);
-
+    final XFile? picked = await _picker.pickImage(source: ImageSource.gallery);
     if (picked != null) {
       setState(() {
         _image = File(picked.path);
       });
     }
+  }
+
+  // ================== DAFTAR SUPABASE ==================
+  Future<void> _daftar() async {
+    if (namaController.text.isEmpty ||
+        emailController.text.isEmpty ||
+        passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Semua field wajib diisi")),
+      );
+      return;
+    }
+
+    setState(() => _loading = true);
+
+    try {
+      // 1. Daftar user di auth
+      final response = await supabase.auth.signUp(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
+
+      if (response.user != null) {
+        // 2. Simpan profile ke tabel profiles
+        await supabase.from('profiles').insert({
+          'id': response.user!.id,
+          'nama': namaController.text.trim(),
+          'username': emailController.text.split('@')[0], // username dari email
+          'email': emailController.text.trim(),
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Daftar berhasil! Silakan login")),
+        );
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const HalamanLogin()),
+        );
+      }
+    } on AuthException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message)),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Terjadi kesalahan: $e")),
+      );
+    }
+
+    setState(() => _loading = false);
   }
 
   @override
@@ -40,8 +93,6 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
             child: Column(
               children: [
                 const SizedBox(height: 20),
-
-                // ===== TITLE =====
                 const Text(
                   "Pocket Log",
                   style: TextStyle(
@@ -50,25 +101,17 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
                     color: Color(0xFFFF5DA2),
                   ),
                 ),
-
                 const SizedBox(height: 25),
 
-                // ===== FOTO PROFIL + ADD =====
+                // ===== FOTO =====
                 Stack(
                   alignment: Alignment.bottomRight,
                   children: [
                     CircleAvatar(
                       radius: 55,
                       backgroundColor: Colors.pink.shade100,
-                      backgroundImage:
-                          _image != null ? FileImage(_image!) : null,
-                      child: _image == null
-                          ? const Icon(
-                              Icons.person,
-                              size: 60,
-                              color: Colors.black,
-                            )
-                          : null,
+                      backgroundImage: _image != null ? FileImage(_image!) : null,
+                      child: _image == null ? const Icon(Icons.person, size: 60) : null,
                     ),
                     GestureDetector(
                       onTap: _pickImage,
@@ -79,11 +122,7 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
                           color: Colors.black,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(
-                          Icons.add,
-                          color: Colors.white,
-                          size: 18,
-                        ),
+                        child: const Icon(Icons.add, color: Colors.white, size: 18),
                       ),
                     ),
                   ],
@@ -91,22 +130,11 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
 
                 const SizedBox(height: 30),
 
-                // ===== INPUT =====
-                _buildInput(
-                  controller: namaController,
-                  hint: "Nama Lengkap",
-                ),
+                _buildInput(controller: namaController, hint: "Nama Lengkap"),
                 const SizedBox(height: 14),
-                _buildInput(
-                  controller: emailController,
-                  hint: "Email",
-                ),
+                _buildInput(controller: emailController, hint: "Email"),
                 const SizedBox(height: 14),
-                _buildInput(
-                  controller: passwordController,
-                  hint: "Password",
-                  obscure: true,
-                ),
+                _buildInput(controller: passwordController, hint: "Password", obscure: true),
 
                 const SizedBox(height: 30),
 
@@ -115,7 +143,7 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
                   children: [
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: () {},
+                        onPressed: _loading ? null : _daftar,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFF9B25A),
                           padding: const EdgeInsets.symmetric(vertical: 14),
@@ -123,18 +151,15 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
                             borderRadius: BorderRadius.circular(14),
                           ),
                         ),
-                        child: const Text(
-                          "Daftar",
-                          style: TextStyle(color: Colors.black),
-                        ),
+                        child: _loading
+                            ? const CircularProgressIndicator(color: Colors.black)
+                            : const Text("Daftar", style: TextStyle(color: Colors.black)),
                       ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
+                        onPressed: () => Navigator.pop(context),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFF9B25A),
                           padding: const EdgeInsets.symmetric(vertical: 14),
@@ -142,10 +167,7 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
                             borderRadius: BorderRadius.circular(14),
                           ),
                         ),
-                        child: const Text(
-                          "Batal",
-                          style: TextStyle(color: Colors.black),
-                        ),
+                        child: const Text("Batal", style: TextStyle(color: Colors.black)),
                       ),
                     ),
                   ],
@@ -153,7 +175,6 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
 
                 const SizedBox(height: 20),
 
-                // ===== LOGIN =====
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -162,17 +183,12 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (_) => const HalamanLogin(),
-                          ),
+                          MaterialPageRoute(builder: (_) => const HalamanLogin()),
                         );
                       },
                       child: const Text(
                         "Login",
-                        style: TextStyle(
-                          color: Colors.blue,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],

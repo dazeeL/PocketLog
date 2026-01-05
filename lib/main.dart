@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/halaman_awal.dart';
-import 'halaman_utama.dart'; 
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'halaman_awal.dart';
+import 'halaman_utama.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(
+    url: 'https://cjupmuenlbfbvdiojkzl.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqdXBtdWVubGJmYnZkaW9qa3psIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY3NDUwODQsImV4cCI6MjA4MjMyMTA4NH0.h2tCMY9V_BRsK_QbACFT5ulM-C3PW-0O95jOPhkDUKk',
+  );
+
   runApp(const PocketLogApp());
 }
 
@@ -17,7 +25,6 @@ class PocketLogApp extends StatelessWidget {
 
       theme: ThemeData(
         primaryColor: Colors.pink[200],
-
         scaffoldBackgroundColor: Colors.white,
 
         appBarTheme: AppBarTheme(
@@ -49,7 +56,9 @@ class PocketLogApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const HalamanUtama(),
-   );
+
+     
+      home: const HalamanAwal(),
+    );
   }
 }
