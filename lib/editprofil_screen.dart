@@ -178,7 +178,7 @@ class _EditProfilScreenState extends State<EditProfilScreen> {
     usernameController.text,
     passwordController.text,
   );
-  Navigator.pop(context); // balik, bukan push
+  Navigator.pop(context); // balik
 
 },
 
