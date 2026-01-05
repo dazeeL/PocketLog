@@ -134,7 +134,7 @@ class _HalamanUtamaState extends State<HalamanUtama> {
           children: [
             const Icon(Icons.arrow_downward, color: Colors.green),
             const SizedBox(height: 6),
-            const Text("Pemasukan",
+            const Text("pemasukan",
                 style: TextStyle(fontSize: 12, color: Colors.grey)),
             const SizedBox(height: 4),
             Text(
@@ -190,7 +190,7 @@ class _HalamanUtamaState extends State<HalamanUtama> {
           children: [
             const Icon(Icons.arrow_upward, color: Colors.red),
             const SizedBox(height: 6),
-            const Text("Pengeluaran",
+            const Text("pengeluaran",
                 style: TextStyle(fontSize: 12, color: Colors.grey)),
             const SizedBox(height: 4),
             Text(
