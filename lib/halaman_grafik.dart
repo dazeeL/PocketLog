@@ -1,9 +1,64 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'halaman_tambah_transaksi.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'halaman_tambah_pemasukan.dart';
+import 'halaman_tambah_transaksi.dart';;
 
-class HalamanGrafik extends StatelessWidget {
+class HalamanGrafik extends StatefulWidget {
   const HalamanGrafik({super.key});
+
+  @override
+  State<HalamanGrafik> createState() => _HalamanGrafikState();
+}
+
+class _HalamanGrafikState extends State<HalamanGrafik> {
+  final supabase = Supabase.instance.client;
+  Map<String, double> kategoriData = {};
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPengeluaran();
+  }
+
+  Future<void> _loadPengeluaran() async {
+    setState(() => isLoading = true);
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+
+    final data = await supabase
+        .from('pengeluaran')
+        .select()
+        .eq('user_id', user.id);
+
+    Map<String, double> tempData = {};
+    for (var item in data) {
+      final kategori = item['kategori'] ?? 'Lainnya';
+      final jumlah = double.tryParse(item['jumlah'].toString()) ?? 0;
+      tempData[kategori] = (tempData[kategori] ?? 0) + jumlah;
+    }
+
+    setState(() {
+      kategoriData = tempData;
+      isLoading = false;
+    });
+  }
+
+  Color _colorForKategori(String kategori) {
+    switch (kategori) {
+      case "Makanan":
+        return Colors.redAccent;
+      case "Transportasi":
+        return Colors.orangeAccent;
+      case "Belanja":
+        return Colors.blueAccent;
+      case "Tagihan":
+        return Colors.green;
+      default:
+        return Colors.purpleAccent;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,118 +70,128 @@ class HalamanGrafik extends StatelessWidget {
         foregroundColor: Colors.white,
         elevation: 0,
       ),
-
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.only(bottom: 20),
-          child: Column(
-            children: [
-              const SizedBox(height: 20),
-
-              // ================= PIE CHART =================
-              SizedBox(
-                height: 240, // LEBIH AMAN
-                child: PieChart(
-                  PieChartData(
-                    centerSpaceRadius: 55,
-                    sectionsSpace: 4,
-                    sections: [
-                      PieChartSectionData(
-                        value: 50,
-                        color: Colors.redAccent,
-                        title: '50%',
-                        radius: 75,
-                        titleStyle: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      PieChartSectionData(
-                        value: 30,
-                        color: Colors.orangeAccent,
-                        title: '30%',
-                        radius: 70,
-                        titleStyle: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      PieChartSectionData(
-                        value: 20,
-                        color: Colors.blueAccent,
-                        title: '20%',
-                        radius: 65,
-                        titleStyle: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // ================= LEGEND =================
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
                 child: Column(
-                  children: const [
-                    LegendItem(color: Colors.redAccent, text: "Makan • 50%"),
-                    LegendItem(color: Colors.orangeAccent, text: "Transport • 30%"),
-                    LegendItem(color: Colors.blueAccent, text: "Belanja • 20%"),
+                  children: [
+                    // Tombol Tambah Pemasukan & Pengeluaran
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            icon: const Icon(Icons.add),
+                            label: const Text("Tambah Pemasukan"),
+                            onPressed: () async {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const HalamanTambahPemasukan(),
+                                ),
+                              );
+                              if (result == true) {
+                                setState(() {}); // Bisa reload data pemasukan kalau mau
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            icon: const Icon(Icons.add),
+                            label: const Text("Tambah Pengeluaran"),
+                            onPressed: () async {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const HalamanTambahTransaksi(),
+                                ),
+                              );
+                              if (result == true) {
+                                _loadPengeluaran(); // reload chart
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 30),
+                    // Grafik pie
+                    if (kategoriData.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 40),
+                        child: Text(
+                          "Belum ada pengeluaran.\nTambahkan transaksi untuk melihat grafik.",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 16, color: Colors.grey),
+                        ),
+                      )
+                    else
+                      Column(
+                        children: [
+                          SizedBox(
+                            height: 240,
+                            child: PieChart(
+                              PieChartData(
+                                centerSpaceRadius: 55,
+                                sectionsSpace: 4,
+                                sections: kategoriData.entries.map((e) {
+                                  final total = kategoriData.values.reduce((a, b) => a + b);
+                                  final percent = (e.value / total * 100).toStringAsFixed(0);
+                                  return PieChartSectionData(
+                                    value: e.value,
+                                    color: _colorForKategori(e.key),
+                                    title: "$percent%",
+                                    radius: 70,
+                                    titleStyle: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          Column(
+                            children: kategoriData.entries
+                                .map((e) => LegendItem(
+                                      color: _colorForKategori(e.key),
+                                      text: "${e.key} • ${(e.value / kategoriData.values.reduce((a, b) => a + b) * 100).toStringAsFixed(0)}%",
+                                    ))
+                                .toList(),
+                          ),
+                        ],
+                      ),
                   ],
                 ),
               ),
-
-              const SizedBox(height: 30),
-
-              // ================= BUTTON =================
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              const HalamanTambahTransaksi(),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.add),
-                    label: const Text("Tambah Transaksi"),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.pink.shade400,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
 }
 
-// ================= LEGEND ITEM =================
+// Legend
 class LegendItem extends StatelessWidget {
   final Color color;
   final String text;
-
-  const LegendItem({
-    super.key,
-    required this.color,
-    required this.text,
-  });
+  const LegendItem({super.key, required this.color, required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -146,14 +211,7 @@ class LegendItem extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(
-            width: 14,
-            height: 14,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
-          ),
+          Container(width: 14, height: 14, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
           const SizedBox(width: 12),
           Text(text, style: const TextStyle(fontSize: 15)),
         ],

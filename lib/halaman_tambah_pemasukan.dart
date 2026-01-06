@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HalamanTambahPemasukan extends StatefulWidget {
   const HalamanTambahPemasukan({super.key});
@@ -20,7 +21,6 @@ class _HalamanTambahPemasukanState extends State<HalamanTambahPemasukan> {
   final keteranganController = TextEditingController();
 
   String? selectedKategori;
-
   final List<String> kategoriList = [
     "Gaji",
     "Uang Saku",
@@ -31,6 +31,9 @@ class _HalamanTambahPemasukanState extends State<HalamanTambahPemasukan> {
     "Lainnya",
   ];
 
+  // ===== Supabase client =====
+  final supabase = Supabase.instance.client;
+
   @override
   void dispose() {
     jumlahController.dispose();
@@ -39,12 +42,68 @@ class _HalamanTambahPemasukanState extends State<HalamanTambahPemasukan> {
     super.dispose();
   }
 
+  // ===== SIMPAN KE SUPABASE =====
+  Future<void> _simpanPemasukan() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final user = supabase.auth.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("User belum login")),
+      );
+      return;
+    }
+
+    // Parse jumlah
+    final jumlah = int.tryParse(jumlahController.text);
+    if (jumlah == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Jumlah uang tidak valid")),
+      );
+      return;
+    }
+
+    // Parse tanggal
+    DateTime tanggal;
+    try {
+      final parts = tanggalController.text.split('/');
+      tanggal = DateTime(
+        int.parse(parts[2]),
+        int.parse(parts[1]),
+        int.parse(parts[0]),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Format tanggal salah")),
+      );
+      return;
+    }
+
+    try {
+  await supabase.from('pemasukan').insert({
+    'user_id': user.id,
+    'jumlah': jumlah,
+    'tanggal': tanggal.toIso8601String(),
+    'kategori': selectedKategori ?? 'Lainnya',
+    'keterangan': keteranganController.text,
+  });
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text("Pemasukan berhasil disimpan")),
+  );
+  Navigator.pop(context, true);
+} catch (e) {
+  debugPrint("Insert pemasukan error: $e");
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text("Gagal menyimpan pemasukan")),
+  );
+}
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-
-      // ===== APP BAR =====
       appBar: AppBar(
         backgroundColor: primaryColor,
         elevation: 0,
@@ -54,8 +113,6 @@ class _HalamanTambahPemasukanState extends State<HalamanTambahPemasukan> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-
-      // ===== BODY =====
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Form(
@@ -74,31 +131,19 @@ class _HalamanTambahPemasukanState extends State<HalamanTambahPemasukan> {
                   controller: jumlahController,
                   hint: "0",
                   keyboard: TextInputType.number,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                  ],
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   prefixText: "Rp ",
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return "Jumlah uang wajib diisi";
-                    }
-                    return null;
-                  },
+                  validator: (value) =>
+                      (value == null || value.isEmpty) ? "Jumlah uang wajib diisi" : null,
                 ),
-
                 const SizedBox(height: 16),
-
                 _label("Tanggal"),
                 _inputField(
                   controller: tanggalController,
                   hint: "dd/mm/yyyy",
                   readOnly: true,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return "Tanggal wajib diisi";
-                    }
-                    return null;
-                  },
+                  validator: (value) =>
+                      (value == null || value.isEmpty) ? "Tanggal wajib diisi" : null,
                   onTap: () async {
                     final date = await showDatePicker(
                       context: context,
@@ -112,31 +157,15 @@ class _HalamanTambahPemasukanState extends State<HalamanTambahPemasukan> {
                     }
                   },
                 ),
-
                 const SizedBox(height: 16),
-
                 _label("Kategori"),
                 DropdownButtonFormField<String>(
                   value: selectedKategori,
                   items: kategoriList
-                      .map(
-                        (e) => DropdownMenuItem(
-                          value: e,
-                          child: Text(e),
-                        ),
-                      )
+                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                       .toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      selectedKategori = value;
-                    });
-                  },
-                  validator: (value) {
-                    if (value == null) {
-                      return "Kategori wajib dipilih";
-                    }
-                    return null;
-                  },
+                  onChanged: (value) => setState(() => selectedKategori = value),
+                  validator: (value) => value == null ? "Kategori wajib dipilih" : null,
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.white,
@@ -146,33 +175,21 @@ class _HalamanTambahPemasukanState extends State<HalamanTambahPemasukan> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 16),
-
                 _label("Keterangan"),
                 _inputField(
                   controller: keteranganController,
                   hint: "Contoh: Gaji / Bonus / dll",
                 ),
-
                 const SizedBox(height: 30),
-
-                // ===== BUTTON =====
                 Row(
                   children: [
                     Expanded(
                       child: ElevatedButton(
-                       onPressed: () {
-  if (_formKey.currentState!.validate()) {
-    final jumlah = int.parse(jumlahController.text);
-    Navigator.pop(context, jumlah); // ⬅️ KIRIM NILAI
-  }
-},
-
+                        onPressed: _simpanPemasukan,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: primaryColor,
-                          padding:
-                              const EdgeInsets.symmetric(vertical: 14),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
@@ -191,8 +208,7 @@ class _HalamanTambahPemasukanState extends State<HalamanTambahPemasukan> {
                       child: OutlinedButton(
                         onPressed: () => Navigator.pop(context),
                         style: OutlinedButton.styleFrom(
-                          padding:
-                              const EdgeInsets.symmetric(vertical: 14),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
@@ -214,15 +230,12 @@ class _HalamanTambahPemasukanState extends State<HalamanTambahPemasukan> {
     );
   }
 
-  // ===== WIDGET BANTU =====
   Widget _label(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Text(
         text,
-        style: const TextStyle(
-          fontWeight: FontWeight.w600,
-        ),
+        style: const TextStyle(fontWeight: FontWeight.w600),
       ),
     );
   }

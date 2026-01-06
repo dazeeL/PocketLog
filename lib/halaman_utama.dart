@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'halaman_tambah_pemasukan.dart';
+import 'halaman_tambah_transaksi.dart';
 import 'halaman_pengingat.dart';
-import 'halaman_grafik.dart';
 import 'profil_screen.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 class HalamanUtama extends StatefulWidget {
   const HalamanUtama({super.key});
@@ -12,22 +14,113 @@ class HalamanUtama extends StatefulWidget {
 }
 
 class _HalamanUtamaState extends State<HalamanUtama> {
+  final supabase = Supabase.instance.client;
+
   final Color primaryColor = const Color(0xFF6C63FF);
   final Color cardColor = const Color(0xFFF5F6FA);
 
   int _currentIndex = 0;
+
+  // ===== DATA USER =====
+  String? namaUser;
+  bool isLoadingNama = true;
 
   // ===== DATA UANG =====
   int saldo = 0;
   int totalPemasukan = 0;
   int totalPengeluaran = 0;
 
+  // ===== DATA PIE CHART =====
+  Map<String, double> grafikData = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+    _loadGrafikData();
+  }
+
+  // ================= LOAD PROFILE =================
+  Future<void> _loadProfile() async {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+
+    final data = await supabase
+        .from('profiles')
+        .select('nama')
+        .eq('id', user.id)
+        .single();
+
+    setState(() {
+      namaUser = data['nama'];
+      isLoadingNama = false;
+    });
+  }
+
+  // ================= LOAD GRAFIK & TOTAL =================
+  Future<void> _loadGrafikData() async {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+
+    final response = await supabase
+        .from('transaksi')
+        .select()
+        .eq('user_id', user.id);
+
+    final List<Map<String, dynamic>> transaksiList =
+        List<Map<String, dynamic>>.from(response as List);
+
+    Map<String, double> tempMap = {};
+    int pemasukanTemp = 0;
+    int pengeluaranTemp = 0;
+
+    for (var trx in transaksiList) {
+      final jumlah = trx['jumlah'] as int;
+      final jenis = trx['jenis'] ?? 'pengeluaran';
+
+      if (jenis == 'pemasukan') {
+        pemasukanTemp += jumlah;
+      } else {
+        pengeluaranTemp += jumlah;
+        final kategori = trx['kategori'] ?? 'Lainnya';
+        tempMap[kategori] = (tempMap[kategori] ?? 0) + jumlah.toDouble();
+      }
+    }
+
+    if (!mounted) return;
+    setState(() {
+      totalPemasukan = pemasukanTemp;
+      totalPengeluaran = pengeluaranTemp;
+      saldo = totalPemasukan - totalPengeluaran;
+      grafikData = tempMap;
+    });
+  }
+
+  // ================= COLOR CHART =================
+  Color _getColor(String kategori) {
+    switch (kategori) {
+      case "Makanan":
+        return Colors.redAccent;
+      case "Transportasi":
+        return Colors.orangeAccent;
+      case "Belanja":
+        return Colors.blueAccent;
+      case "Tagihan":
+        return Colors.greenAccent;
+      default:
+        return Colors.grey;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final pages = [
       _homeContent(),
       const HalamanPengingat(),
-      const HalamanGrafik(),
+      HalamanGrafikSupabase(
+        supabase: supabase,
+        getColor: _getColor,
+      ),
       const ProfilScreen(),
     ];
 
@@ -36,7 +129,10 @@ class _HalamanUtamaState extends State<HalamanUtama> {
       body: SafeArea(child: pages[_currentIndex]),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
+        onTap: (index) {
+          setState(() => _currentIndex = index);
+          if (index == 2) _loadGrafikData();
+        },
         type: BottomNavigationBarType.fixed,
         selectedItemColor: primaryColor,
         unselectedItemColor: Colors.grey,
@@ -65,14 +161,20 @@ class _HalamanUtamaState extends State<HalamanUtama> {
                 child: Icon(Icons.person, color: primaryColor),
               ),
               const SizedBox(width: 12),
-              const Text(
-                "Liuna",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
+              isLoadingNama
+                  ? const Text(
+                      "Loading...",
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    )
+                  : Text(
+                      namaUser ?? "User",
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
             ],
           ),
           const SizedBox(height: 24),
-
           Text(
             "Pocket Log",
             style: TextStyle(
@@ -82,7 +184,6 @@ class _HalamanUtamaState extends State<HalamanUtama> {
             ),
           ),
           const SizedBox(height: 10),
-
           const Text("Saldo Saat Ini", style: TextStyle(color: Colors.grey)),
           const SizedBox(height: 6),
           Text(
@@ -92,9 +193,7 @@ class _HalamanUtamaState extends State<HalamanUtama> {
               fontWeight: FontWeight.bold,
             ),
           ),
-
           const SizedBox(height: 24),
-
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -109,18 +208,17 @@ class _HalamanUtamaState extends State<HalamanUtama> {
               ],
             ),
           ),
-
           const SizedBox(height: 32),
-
           SizedBox(
             height: 260,
-            child: HalamanGrafik(),
+            child: _buildPieChartHome(),
           ),
         ],
       ),
     );
   }
 
+  // ================= PEMASUKAN BOX =================
   Widget _pemasukanBox() {
     return Expanded(
       child: Container(
@@ -134,7 +232,7 @@ class _HalamanUtamaState extends State<HalamanUtama> {
           children: [
             const Icon(Icons.arrow_downward, color: Colors.green),
             const SizedBox(height: 6),
-            const Text("pemasukan",
+            const Text("Pemasukan",
                 style: TextStyle(fontSize: 12, color: Colors.grey)),
             const SizedBox(height: 4),
             Text(
@@ -146,18 +244,14 @@ class _HalamanUtamaState extends State<HalamanUtama> {
               alignment: Alignment.bottomRight,
               child: InkWell(
                 onTap: () async {
-                  final result = await Navigator.push<int>(
+                  final result = await Navigator.push<bool>(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => const HalamanTambahPemasukan(),
-                    ),
+                        builder: (_) => const HalamanTambahPemasukan()),
                   );
 
-                  if (result != null) {
-                    setState(() {
-                      totalPemasukan += result;
-                      saldo += result;
-                    });
+                  if (result == true) {
+                    await _loadGrafikData();
                   }
                 },
                 child: Container(
@@ -177,6 +271,7 @@ class _HalamanUtamaState extends State<HalamanUtama> {
     );
   }
 
+  // ================= PENGELUARAN BOX =================
   Widget _pengeluaranBox() {
     return Expanded(
       child: Container(
@@ -190,14 +285,163 @@ class _HalamanUtamaState extends State<HalamanUtama> {
           children: [
             const Icon(Icons.arrow_upward, color: Colors.red),
             const SizedBox(height: 6),
-            const Text("pengeluaran",
+            const Text("Pengeluaran",
                 style: TextStyle(fontSize: 12, color: Colors.grey)),
             const SizedBox(height: 4),
             Text(
               "Rp $totalPengeluaran",
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.bottomRight,
+              child: InkWell(
+                onTap: () async {
+                  final result = await Navigator.push<bool>(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const HalamanTambahTransaksi()),
+                  );
+
+                  if (result == true) {
+                    await _loadGrafikData();
+                  }
+                },
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.add, color: Colors.white),
+                ),
+              ),
+            ),
           ],
+        ),
+      ),
+    );
+  }
+
+  // ================= PIE CHART =================
+  Widget _buildPieChartHome() {
+    if (grafikData.isEmpty) {
+      return const Center(child: Text("Belum ada transaksi"));
+    }
+
+    final sections = grafikData.entries.map((entry) {
+      final value = entry.value;
+      final percent = value /
+          (grafikData.values.fold(0.0, (sum, element) => sum + element)) *
+          100;
+      return PieChartSectionData(
+        value: value,
+        title: "${percent.toStringAsFixed(0)}%",
+        color: _getColor(entry.key),
+        radius: 70,
+        titleStyle: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
+      );
+    }).toList();
+
+    return PieChart(
+      PieChartData(
+        centerSpaceRadius: 55,
+        sectionsSpace: 4,
+        sections: sections,
+      ),
+    );
+  }
+}
+
+// ================= HALAMAN GRAFIK SUPABASE =================
+class HalamanGrafikSupabase extends StatefulWidget {
+  final SupabaseClient supabase;
+  final Color Function(String) getColor;
+
+  const HalamanGrafikSupabase({
+    super.key,
+    required this.supabase,
+    required this.getColor,
+  });
+
+  @override
+  State<HalamanGrafikSupabase> createState() => _HalamanGrafikSupabaseState();
+}
+
+class _HalamanGrafikSupabaseState extends State<HalamanGrafikSupabase> {
+  Map<String, double> grafikData = {};
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadGrafik();
+  }
+
+  Future<void> _loadGrafik() async {
+    final user = widget.supabase.auth.currentUser;
+    if (user == null) return;
+
+    final response = await widget.supabase
+        .from('transaksi')
+        .select()
+        .eq('user_id', user.id);
+
+    final List<Map<String, dynamic>> transaksiList =
+        List<Map<String, dynamic>>.from(response as List);
+
+    Map<String, double> tempMap = {};
+
+    for (var trx in transaksiList) {
+      final kategori = trx['kategori'] ?? 'Lainnya';
+      final jumlah = (trx['jumlah'] as int).toDouble();
+      tempMap[kategori] = (tempMap[kategori] ?? 0) + jumlah;
+    }
+
+    setState(() {
+      grafikData = tempMap;
+      isLoading = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (grafikData.isEmpty) {
+      return const Center(child: Text("Belum ada transaksi"));
+    }
+
+    final sections = grafikData.entries.map((entry) {
+      final value = entry.value;
+      final percent = value /
+          (grafikData.values.fold(0.0, (sum, element) => sum + element)) *
+          100;
+
+      return PieChartSectionData(
+        value: value,
+        title: "${percent.toStringAsFixed(0)}%",
+        color: widget.getColor(entry.key),
+        radius: 70,
+        titleStyle: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
+      );
+    }).toList();
+
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: PieChart(
+        PieChartData(
+          centerSpaceRadius: 55,
+          sectionsSpace: 4,
+          sections: sections,
         ),
       ),
     );

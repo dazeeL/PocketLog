@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HalamanTambahPengingat extends StatefulWidget {
   const HalamanTambahPengingat({super.key});
 
   @override
-  State<HalamanTambahPengingat> createState() =>
-      _HalamanTambahPengingatState();
+  State<HalamanTambahPengingat> createState() => _HalamanTambahPengingatState();
 }
 
 class _HalamanTambahPengingatState extends State<HalamanTambahPengingat> {
+  final supabase = Supabase.instance.client;
   final TextEditingController namaController = TextEditingController();
   final TextEditingController jumlahController = TextEditingController();
   DateTime? selectedDate;
@@ -18,19 +19,33 @@ class _HalamanTambahPengingatState extends State<HalamanTambahPengingat> {
   final Color bgColor = const Color(0xFFFFF7FB);
   final Color fieldColor = const Color(0xFFFFEEF6);
 
-  // ===== DATE PICKER =====
   Future<void> pilihTanggal() async {
-    final DateTime? picked = await showDatePicker(
+    final picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime(2020),
       lastDate: DateTime(2100),
     );
+    if (picked != null) setState(() => selectedDate = picked);
+  }
 
-    if (picked != null) {
-      setState(() {
-        selectedDate = picked;
+  Future<void> _simpanPengingat() async {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+    if (namaController.text.isEmpty || jumlahController.text.isEmpty || selectedDate == null) return;
+
+    try {
+      await supabase.from('pengingat').insert({
+        'user_id': user.id,
+        'nama_tagihan': namaController.text,
+        'jumlah': int.parse(jumlahController.text),
+        'tanggal': selectedDate!.toIso8601String(),
+        'is_done': false,
       });
+
+      Navigator.pop(context, true); // kirim signal reload
+    } catch (e) {
+      debugPrint("Error tambah pengingat: $e");
     }
   }
 
@@ -38,15 +53,11 @@ class _HalamanTambahPengingatState extends State<HalamanTambahPengingat> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: bgColor,
-
-      // ===== APP BAR =====
       appBar: AppBar(
         backgroundColor: primaryColor,
         elevation: 0,
         title: const Text("Tambah Pengingat"),
       ),
-
-      // ===== BODY =====
       body: Center(
         child: Container(
           width: 340,
@@ -66,29 +77,17 @@ class _HalamanTambahPengingatState extends State<HalamanTambahPengingat> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-
-              // ===== NAMA TAGIHAN =====
               _label("Nama Tagihan"),
-              _textField(
-                controller: namaController,
-                hint: "Contoh: Listrik, Internet",
-              ),
-
+              _textField(controller: namaController, hint: "Contoh: Listrik, Internet"),
               const SizedBox(height: 16),
-
-              // ===== JUMLAH UANG =====
               _label("Jumlah Uang"),
               TextField(
                 controller: jumlahController,
                 keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                ],
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 decoration: InputDecoration(
                   prefixText: "Rp ",
-                  prefixStyle: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  prefixStyle: const TextStyle(fontWeight: FontWeight.bold),
                   hintText: "0",
                   filled: true,
                   fillColor: fieldColor,
@@ -98,16 +97,12 @@ class _HalamanTambahPengingatState extends State<HalamanTambahPengingat> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 16),
-
-              // ===== TANGGAL =====
               _label("Tanggal"),
               InkWell(
                 onTap: pilihTanggal,
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                   decoration: BoxDecoration(
                     color: fieldColor,
                     borderRadius: BorderRadius.circular(14),
@@ -121,40 +116,25 @@ class _HalamanTambahPengingatState extends State<HalamanTambahPengingat> {
                             : "${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}",
                         style: const TextStyle(fontSize: 15),
                       ),
-                      Icon(
-                        Icons.calendar_today,
-                        size: 20,
-                        color: primaryColor,
-                      ),
+                      Icon(Icons.calendar_today, size: 20, color: primaryColor),
                     ],
                   ),
                 ),
               ),
-
               const SizedBox(height: 28),
-
-              // ===== BUTTON =====
               Row(
                 children: [
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
+                      onPressed: _simpanPengingat,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryColor,
-                        padding:
-                            const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
                       child: const Text(
                         "Simpan",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
+                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
                       ),
                     ),
                   ),
@@ -163,20 +143,11 @@ class _HalamanTambahPengingatState extends State<HalamanTambahPengingat> {
                     child: OutlinedButton(
                       onPressed: () => Navigator.pop(context),
                       style: OutlinedButton.styleFrom(
-                        padding:
-                            const EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                         side: BorderSide(color: primaryColor),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
-                      child: Text(
-                        "Batal",
-                        style: TextStyle(
-                          color: primaryColor,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      child: Text("Batal", style: TextStyle(color: primaryColor, fontWeight: FontWeight.w600)),
                     ),
                   ),
                 ],
@@ -188,23 +159,14 @@ class _HalamanTambahPengingatState extends State<HalamanTambahPengingat> {
     );
   }
 
-  // ===== HELPER =====
   Widget _label(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontWeight: FontWeight.w600,
-        ),
-      ),
+      child: Text(text, style: const TextStyle(fontWeight: FontWeight.w600)),
     );
   }
 
-  Widget _textField({
-    required TextEditingController controller,
-    required String hint,
-  }) {
+  Widget _textField({required TextEditingController controller, required String hint}) {
     return TextField(
       controller: controller,
       decoration: InputDecoration(

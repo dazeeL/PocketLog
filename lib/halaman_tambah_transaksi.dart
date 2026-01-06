@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HalamanTambahTransaksi extends StatefulWidget {
   const HalamanTambahTransaksi({super.key});
@@ -27,12 +28,73 @@ class _HalamanTambahTransaksiState extends State<HalamanTambahTransaksi> {
     "Lainnya",
   ];
 
+  final supabase = Supabase.instance.client;
+
+  @override
+  void dispose() {
+    jumlahController.dispose();
+    tanggalController.dispose();
+    keteranganController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _simpanTransaksi() async {
+    final user = supabase.auth.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("User belum login")),
+      );
+      return;
+    }
+
+    final jumlah = int.tryParse(jumlahController.text);
+    if (jumlah == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Jumlah tidak valid")),
+      );
+      return;
+    }
+
+    DateTime tanggal;
+    try {
+      final parts = tanggalController.text.split('/');
+      tanggal = DateTime(
+        int.parse(parts[2]),
+        int.parse(parts[1]),
+        int.parse(parts[0]),
+      );
+    } catch (_) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Format tanggal salah")),
+      );
+      return;
+    }
+
+    try {
+      await supabase.from('transaksi').insert({
+        'user_id': user.id,
+        'jumlah': jumlah,
+        'tanggal': tanggal.toIso8601String(),
+        'kategori': selectedKategori ?? 'Lainnya',
+        'keterangan': keteranganController.text,
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Transaksi berhasil disimpan")),
+      );
+      Navigator.pop(context, true); // Kirim true supaya halaman grafik refresh
+    } catch (e) {
+      debugPrint("Insert transaksi error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Gagal menyimpan transaksi")),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-
-      // ================= APPBAR =================
       appBar: AppBar(
         backgroundColor: primaryColor,
         elevation: 0,
@@ -42,8 +104,6 @@ class _HalamanTambahTransaksiState extends State<HalamanTambahTransaksi> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-
-      // ================= BODY =================
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Container(
@@ -59,9 +119,7 @@ class _HalamanTambahTransaksiState extends State<HalamanTambahTransaksi> {
               TextField(
                 controller: jumlahController,
                 keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                ],
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 decoration: InputDecoration(
                   prefixText: "Rp ",
                   filled: true,
@@ -73,9 +131,7 @@ class _HalamanTambahTransaksiState extends State<HalamanTambahTransaksi> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 16),
-
               _label("Tanggal"),
               TextField(
                 controller: tanggalController,
@@ -103,25 +159,14 @@ class _HalamanTambahTransaksiState extends State<HalamanTambahTransaksi> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 16),
-
               _label("Kategori"),
               DropdownButtonFormField<String>(
                 value: selectedKategori,
                 items: kategoriList
-                    .map(
-                      (e) => DropdownMenuItem(
-                        value: e,
-                        child: Text(e),
-                      ),
-                    )
+                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                     .toList(),
-                onChanged: (value) {
-                  setState(() {
-                    selectedKategori = value;
-                  });
-                },
+                onChanged: (value) => setState(() => selectedKategori = value),
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: Colors.white,
@@ -131,9 +176,7 @@ class _HalamanTambahTransaksiState extends State<HalamanTambahTransaksi> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 16),
-
               _label("Keterangan"),
               TextField(
                 controller: keteranganController,
@@ -147,22 +190,12 @@ class _HalamanTambahTransaksiState extends State<HalamanTambahTransaksi> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 30),
-
-              // ================= BUTTON =================
               Row(
                 children: [
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Transaksi berhasil ditambahkan"),
-                          ),
-                        );
-                        Navigator.pop(context);
-                      },
+                      onPressed: _simpanTransaksi,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryColor,
                         padding: const EdgeInsets.symmetric(vertical: 14),
@@ -205,7 +238,6 @@ class _HalamanTambahTransaksiState extends State<HalamanTambahTransaksi> {
     );
   }
 
-  // ================= HELPER =================
   Widget _label(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
