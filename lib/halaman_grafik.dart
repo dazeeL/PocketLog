@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'halaman_tambah_pemasukan.dart';
-import 'halaman_tambah_transaksi.dart';;
+import 'halaman_tambah_transaksi.dart';
 
 class HalamanGrafik extends StatefulWidget {
   const HalamanGrafik({super.key});
