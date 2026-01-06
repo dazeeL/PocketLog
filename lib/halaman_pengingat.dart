@@ -1,55 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'halaman_tambah_pengingat.dart';
 
-import 'halaman_utama.dart';
-import 'halaman_daftar.dart';
-
-class HalamanLogin extends StatefulWidget {
-  const HalamanLogin({super.key});
+class HalamanPengingat extends StatefulWidget {
+  const HalamanPengingat({super.key});
 
   @override
-  State<HalamanLogin> createState() => _HalamanLoginState();
+  State<HalamanPengingat> createState() => _HalamanPengingatState();
 }
 
-class _HalamanLoginState extends State<HalamanLogin> {
-  final emailController = TextEditingController();
-  final passwordController = TextEditingController();
+class _HalamanPengingatState extends State<HalamanPengingat> {
+  final supabase = Supabase.instance.client;
+  final Color primaryColor = const Color(0xFFFF5DA2);
+  final Color bgColor = const Color(0xFFFFF7FB);
+  final Color cardColor = Colors.white;
 
-  bool isLoading = false;
+  List<Map<String, dynamic>> pengingatList = [];
+  bool isLoading = true;
 
-  Future<void> _login() async {
-    if (emailController.text.isEmpty || passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Email dan password wajib diisi")),
-      );
-      return;
-    }
+  @override
+  void initState() {
+    super.initState();
+    _loadPengingat();
+  }
 
+  Future<void> _loadPengingat() async {
     setState(() => isLoading = true);
-
     try {
-      final response =
-          await Supabase.instance.client.auth.signInWithPassword(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
-      );
+      final userId = supabase.auth.currentUser?.id;
+      if (userId == null) return;
 
-      if (response.session != null) {
-        // LOGIN BERHASIL
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const HalamanUtama()),
-        );
-      }
-    } on AuthException catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
-      );
+      final data = await supabase
+          .from('pengingat')
+          .select()
+          .eq('user_id', userId)
+          .order('tanggal', ascending: true);
+
+      setState(() {
+        pengingatList = List<Map<String, dynamic>>.from(data);
+        isLoading = false;
+      });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Terjadi kesalahan")),
-      );
-    } finally {
+      debugPrint("Error load pengingat: $e");
       setState(() => isLoading = false);
     }
   }
@@ -57,128 +49,119 @@ class _HalamanLoginState extends State<HalamanLogin> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: bgColor,
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 28),
-            child: Column(
-              children: [
-                const SizedBox(height: 30),
-
-                const Text(
-                  "Pocket Log",
-                  style: TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFFFF5DA2),
-                  ),
-                ),
-
-                const SizedBox(height: 30),
-
-                Image.asset(
-                  "asset/logo.png",
-                  height: 170,
-                ),
-
-                const SizedBox(height: 30),
-
-                _inputField(
-                  controller: emailController,
-                  hint: "Email",
-                  icon: Icons.email_outlined,
-                ),
-
-                const SizedBox(height: 14),
-
-                _inputField(
-                  controller: passwordController,
-                  hint: "Password",
-                  icon: Icons.lock_outline,
-                  obscure: true,
-                ),
-
-                const SizedBox(height: 20),
-
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: isLoading ? null : _login,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFF9B25A),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
+        child: Column(
+          children: [
+            const SizedBox(height: 16),
+            // HEADER
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  const Text(
+                    "Pengingat",
+                    style: TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
                     ),
-                    child: isLoading
-                        ? const CircularProgressIndicator(color: Colors.black)
-                        : const Text(
-                            "Masuk",
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
                   ),
-                ),
-
-                const SizedBox(height: 25),
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text("Belum punya akun? "),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const HalamanDaftar(),
-                          ),
-                        );
-                      },
-                      child: const Text(
-                        "Daftar",
-                        style: TextStyle(
-                          color: Colors.blue,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 20),
-              ],
+                  const Spacer(),
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundColor: primaryColor.withOpacity(0.2),
+                    child: Icon(Icons.person, color: primaryColor),
+                  ),
+                ],
+              ),
             ),
-          ),
+            const SizedBox(height: 24),
+
+            // LIST PENGINGAT
+            Expanded(
+              child: isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : pengingatList.isEmpty
+                      ? const Center(child: Text("Belum ada pengingat"))
+                      : ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          itemCount: pengingatList.length,
+                          itemBuilder: (context, index) {
+                            final item = pengingatList[index];
+                            final tanggal = DateTime.parse(item['tanggal']);
+                            bool checked = item['is_done'] ?? false;
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: _cardDecoration(),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            item['nama_tagihan'] ?? "-",
+                                            style: const TextStyle(fontWeight: FontWeight.w600),
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Text("Rp ${item['jumlah'] ?? 0}"),
+                                          const SizedBox(height: 6),
+                                          Text("${tanggal.day}/${tanggal.month}/${tanggal.year}"),
+                                        ],
+                                      ),
+                                    ),
+                                    Checkbox(
+                                      value: checked,
+                                      activeColor: primaryColor,
+                                      onChanged: (value) async {
+                                        await supabase
+                                            .from('pengingat')
+                                            .update({'is_done': value})
+                                            .eq('id', item['id']);
+                                        _loadPengingat();
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+            ),
+          ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: primaryColor,
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const HalamanTambahPengingat(),
+            ),
+          );
+
+          // Reload list jika ada pengingat baru
+          if (result == true) _loadPengingat();
+        },
+        child: const Icon(Icons.add, size: 28),
       ),
     );
   }
 
-  Widget _inputField({
-    required TextEditingController controller,
-    required String hint,
-    required IconData icon,
-    bool obscure = false,
-  }) {
-    return TextField(
-      controller: controller,
-      obscureText: obscure,
-      decoration: InputDecoration(
-        hintText: hint,
-        prefixIcon: Icon(icon),
-        filled: true,
-        fillColor: Colors.grey.shade200,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide.none,
+  BoxDecoration _cardDecoration() {
+    return BoxDecoration(
+      color: cardColor,
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.06),
+          blurRadius: 10,
+          offset: const Offset(0, 4),
         ),
-      ),
+      ],
     );
   }
 }
