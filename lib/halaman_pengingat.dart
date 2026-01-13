@@ -11,9 +11,12 @@ class HalamanPengingat extends StatefulWidget {
 
 class _HalamanPengingatState extends State<HalamanPengingat> {
   final supabase = Supabase.instance.client;
-  final Color primaryColor = const Color(0xFFFF5DA2);
-  final Color bgColor = const Color(0xFFFFF7FB);
-  final Color cardColor = Colors.white;
+
+  // ===== PALET POCKETLOG =====
+  final Color primaryColor = const Color(0xFFE47990);
+  final Color bgColor = const Color(0xFFF9CBD2);
+  final Color cardColor = const Color(0xFFFFF7FA);
+  final Color accentColor = const Color(0xFFB8445E);
 
   List<Map<String, dynamic>> pengingatList = [];
   bool isLoading = true;
@@ -54,7 +57,8 @@ class _HalamanPengingatState extends State<HalamanPengingat> {
         child: Column(
           children: [
             const SizedBox(height: 16),
-            // HEADER
+
+            // ===== HEADER =====
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
@@ -64,6 +68,7 @@ class _HalamanPengingatState extends State<HalamanPengingat> {
                     style: TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.bold,
+                      color: Color(0xFF3A3A3A),
                     ),
                   ),
                   const Spacer(),
@@ -75,14 +80,20 @@ class _HalamanPengingatState extends State<HalamanPengingat> {
                 ],
               ),
             ),
+
             const SizedBox(height: 24),
 
-            // LIST PENGINGAT
+            // ===== LIST =====
             Expanded(
               child: isLoading
-                  ? const Center(child: CircularProgressIndicator())
+                  ? CircularProgressIndicator(color: primaryColor)
                   : pengingatList.isEmpty
-                      ? const Center(child: Text("Belum ada pengingat"))
+                      ? const Center(
+                          child: Text(
+                            "Belum ada pengingat",
+                            style: TextStyle(color: Colors.black54),
+                          ),
+                        )
                       : ListView.builder(
                           padding: const EdgeInsets.symmetric(horizontal: 20),
                           itemCount: pengingatList.length,
@@ -90,6 +101,7 @@ class _HalamanPengingatState extends State<HalamanPengingat> {
                             final item = pengingatList[index];
                             final tanggal = DateTime.parse(item['tanggal']);
                             bool checked = item['is_done'] ?? false;
+
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 12),
                               child: Container(
@@ -99,22 +111,38 @@ class _HalamanPengingatState extends State<HalamanPengingat> {
                                   children: [
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             item['nama_tagihan'] ?? "-",
-                                            style: const TextStyle(fontWeight: FontWeight.w600),
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                            ),
                                           ),
                                           const SizedBox(height: 6),
-                                          Text("Rp ${item['jumlah'] ?? 0}"),
+                                          Text(
+                                            "Rp ${item['jumlah'] ?? 0}",
+                                            style: TextStyle(
+                                              color: accentColor,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
                                           const SizedBox(height: 6),
-                                          Text("${tanggal.day}/${tanggal.month}/${tanggal.year}"),
+                                          Text(
+                                            "${tanggal.day}/${tanggal.month}/${tanggal.year}",
+                                            style: const TextStyle(
+                                              color: Colors.black54,
+                                              fontSize: 12,
+                                            ),
+                                          ),
                                         ],
                                       ),
                                     ),
                                     Checkbox(
                                       value: checked,
                                       activeColor: primaryColor,
+                                      checkColor: Colors.white,
                                       onChanged: (value) async {
                                         await supabase
                                             .from('pengingat')
@@ -133,6 +161,8 @@ class _HalamanPengingatState extends State<HalamanPengingat> {
           ],
         ),
       ),
+
+      // ===== FAB =====
       floatingActionButton: FloatingActionButton(
         backgroundColor: primaryColor,
         onPressed: () async {
@@ -143,10 +173,9 @@ class _HalamanPengingatState extends State<HalamanPengingat> {
             ),
           );
 
-          // Reload list jika ada pengingat baru
           if (result == true) _loadPengingat();
         },
-        child: const Icon(Icons.add, size: 28),
+        child: const Icon(Icons.add, size: 28, color: Colors.white),
       ),
     );
   }
@@ -157,9 +186,9 @@ class _HalamanPengingatState extends State<HalamanPengingat> {
       borderRadius: BorderRadius.circular(16),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.06),
-          blurRadius: 10,
-          offset: const Offset(0, 4),
+          color: primaryColor.withOpacity(0.15),
+          blurRadius: 12,
+          offset: const Offset(0, 6),
         ),
       ],
     );

@@ -9,7 +9,7 @@ class HalamanAwal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF9CBD2),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -23,7 +23,7 @@ class HalamanAwal extends StatelessWidget {
                 style: GoogleFonts.poppins(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFFE67AD2),
+                  color: const Color(0xFFB8445E),
                 ),
               ),
 
@@ -34,11 +34,11 @@ class HalamanAwal extends StatelessWidget {
                 width: 220,
                 height: 220,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF6ECFA),
+                  color: const Color(0xFFF2B8C2),
                   borderRadius: BorderRadius.circular(28),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color.fromARGB(255, 255, 51, 163).withOpacity(0.08),
+                      color: const Color(0xFFB8445E).withOpacity(0.15),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -60,7 +60,7 @@ class HalamanAwal extends StatelessWidget {
                 style: GoogleFonts.poppins(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFFD96AC9),
+                  color: const Color(0xFFE47990),
                 ),
               ),
 
@@ -70,13 +70,13 @@ class HalamanAwal extends StatelessWidget {
                 "Kelola keuanganmu dengan mudah",
                 style: GoogleFonts.poppins(
                   fontSize: 13,
-                  color: Colors.grey.shade600,
+                  color: const Color(0xFF8A4A57),
                 ),
               ),
 
               const SizedBox(height: 40),
 
-              // ===== BUTTON DAFTAR (GRADIENT) =====
+              // ===== BUTTON DAFTAR =====
               SizedBox(
                 width: double.infinity,
                 height: 50,
@@ -92,7 +92,8 @@ class HalamanAwal extends StatelessWidget {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.zero,
+                    backgroundColor: const Color(0xFFE47990),
+                    foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
@@ -102,7 +103,7 @@ class HalamanAwal extends StatelessWidget {
 
               const SizedBox(height: 14),
 
-              // ===== BUTTON MASUK (GRADIENT) =====
+              // ===== BUTTON MASUK =====
               SizedBox(
                 width: double.infinity,
                 height: 50,
@@ -118,7 +119,8 @@ class HalamanAwal extends StatelessWidget {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.zero,
+                    backgroundColor: const Color(0xFFB8445E),
+                    foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),

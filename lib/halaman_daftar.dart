@@ -45,18 +45,16 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
     setState(() => _loading = true);
 
     try {
-      // 1. Daftar user di auth
       final response = await supabase.auth.signUp(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
 
       if (response.user != null) {
-        // 2. Simpan profile ke tabel profiles
         await supabase.from('profiles').insert({
           'id': response.user!.id,
           'nama': namaController.text.trim(),
-          'username': emailController.text.split('@')[0], // username dari email
+          'username': emailController.text.split('@')[0],
           'email': emailController.text.trim(),
         });
 
@@ -85,7 +83,7 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF9CBD2),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -98,7 +96,7 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFFFF5DA2),
+                    color: Color(0xFFB8445E),
                   ),
                 ),
                 const SizedBox(height: 25),
@@ -109,9 +107,13 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
                   children: [
                     CircleAvatar(
                       radius: 55,
-                      backgroundColor: Colors.pink.shade100,
-                      backgroundImage: _image != null ? FileImage(_image!) : null,
-                      child: _image == null ? const Icon(Icons.person, size: 60) : null,
+                      backgroundColor: const Color(0xFFF2B8C2),
+                      backgroundImage:
+                          _image != null ? FileImage(_image!) : null,
+                      child: _image == null
+                          ? const Icon(Icons.person,
+                              size: 60, color: Color(0xFFB8445E))
+                          : null,
                     ),
                     GestureDetector(
                       onTap: _pickImage,
@@ -119,10 +121,11 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
                         width: 32,
                         height: 32,
                         decoration: const BoxDecoration(
-                          color: Colors.black,
+                          color: Color(0xFFE47990),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.add, color: Colors.white, size: 18),
+                        child: const Icon(Icons.add,
+                            color: Colors.white, size: 18),
                       ),
                     ),
                   ],
@@ -134,7 +137,10 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
                 const SizedBox(height: 14),
                 _buildInput(controller: emailController, hint: "Email"),
                 const SizedBox(height: 14),
-                _buildInput(controller: passwordController, hint: "Password", obscure: true),
+                _buildInput(
+                    controller: passwordController,
+                    hint: "Password",
+                    obscure: true),
 
                 const SizedBox(height: 30),
 
@@ -145,15 +151,17 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
                       child: ElevatedButton(
                         onPressed: _loading ? null : _daftar,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFF9B25A),
+                          backgroundColor: const Color(0xFFE47990),
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
                         ),
                         child: _loading
-                            ? const CircularProgressIndicator(color: Colors.black)
-                            : const Text("Daftar", style: TextStyle(color: Colors.black)),
+                            ? const CircularProgressIndicator(
+                                color: Colors.white)
+                            : const Text("Daftar",
+                                style: TextStyle(color: Colors.white)),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -161,13 +169,14 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
                       child: ElevatedButton(
                         onPressed: () => Navigator.pop(context),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFF9B25A),
+                          backgroundColor: const Color(0xFFB8445E),
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
                         ),
-                        child: const Text("Batal", style: TextStyle(color: Colors.black)),
+                        child: const Text("Batal",
+                            style: TextStyle(color: Colors.white)),
                       ),
                     ),
                   ],
@@ -183,12 +192,16 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const HalamanLogin()),
+                          MaterialPageRoute(
+                              builder: (_) => const HalamanLogin()),
                         );
                       },
                       child: const Text(
                         "Login",
-                        style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          color: Color(0xFFB8445E),
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
@@ -212,7 +225,7 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
       decoration: InputDecoration(
         hintText: hint,
         filled: true,
-        fillColor: Colors.grey.shade200,
+        fillColor: const Color(0xFFF8D8DE),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,

@@ -35,7 +35,6 @@ class _HalamanLoginState extends State<HalamanLogin> {
       );
 
       if (response.session != null) {
-        // LOGIN BERHASIL
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const HalamanUtama()),
@@ -57,7 +56,7 @@ class _HalamanLoginState extends State<HalamanLogin> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF9CBD2),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -71,7 +70,7 @@ class _HalamanLoginState extends State<HalamanLogin> {
                   style: TextStyle(
                     fontSize: 30,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFFFF5DA2),
+                    color: Color(0xFFE47990),
                   ),
                 ),
 
@@ -106,18 +105,18 @@ class _HalamanLoginState extends State<HalamanLogin> {
                   child: ElevatedButton(
                     onPressed: isLoading ? null : _login,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFF9B25A),
+                      backgroundColor: const Color(0xFFE47990),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
                     ),
                     child: isLoading
-                        ? const CircularProgressIndicator(color: Colors.black)
+                        ? const CircularProgressIndicator(color: Colors.white)
                         : const Text(
                             "Masuk",
                             style: TextStyle(
-                              color: Colors.black,
+                              color: Colors.white,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
@@ -143,7 +142,7 @@ class _HalamanLoginState extends State<HalamanLogin> {
                       child: const Text(
                         "Daftar",
                         style: TextStyle(
-                          color: Colors.blue,
+                          color: Color(0xFFB8445E),
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -171,9 +170,9 @@ class _HalamanLoginState extends State<HalamanLogin> {
       obscureText: obscure,
       decoration: InputDecoration(
         hintText: hint,
-        prefixIcon: Icon(icon),
+        prefixIcon: Icon(icon, color: const Color(0xFFE47990)),
         filled: true,
-        fillColor: Colors.grey.shade200,
+        fillColor: const Color(0xFFF8D8DE),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,

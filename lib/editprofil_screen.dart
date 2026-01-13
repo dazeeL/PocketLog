@@ -38,7 +38,6 @@ class _EditProfilScreenState extends State<EditProfilScreen> {
     emailController = TextEditingController(text: widget.email);
   }
 
-  // ===== SIMPAN PERUBAHAN KE SUPABASE =====
   Future<void> _simpanPerubahan() async {
     setState(() => isLoading = true);
 
@@ -48,14 +47,12 @@ class _EditProfilScreenState extends State<EditProfilScreen> {
         throw Exception("User belum login");
       }
 
-      // Update profil di tabel profiles
       await supabase.from('profiles').update({
         'nama': namaController.text.trim(),
         'username': usernameController.text.trim(),
         'email': emailController.text.trim(),
       }).eq('id', userId);
 
-      // Callback ke parent widget
       widget.onSave(
         namaController.text,
         emailController.text,
@@ -80,13 +77,13 @@ class _EditProfilScreenState extends State<EditProfilScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6FA),
+      backgroundColor: const Color(0xFFF9CBD2),
       appBar: AppBar(
         title: Text(
           "Edit Profil",
           style: GoogleFonts.rubik(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: const Color.fromARGB(255, 243, 56, 171),
+        backgroundColor: const Color(0xFFE47990),
         foregroundColor: Colors.white,
         elevation: 0,
       ),
@@ -97,31 +94,27 @@ class _EditProfilScreenState extends State<EditProfilScreen> {
           children: [
             const SizedBox(height: 20),
 
-            // NAMA
             _buildLabel("Nama Lengkap"),
             _buildTextField(namaController, "Masukkan nama"),
 
             const SizedBox(height: 16),
 
-            // USERNAME
             _buildLabel("Username"),
             _buildTextField(usernameController, "Masukkan username"),
 
             const SizedBox(height: 16),
 
-            // EMAIL
             _buildLabel("Email"),
             _buildTextField(emailController, "Masukkan email"),
 
             const SizedBox(height: 40),
 
-            // BUTTON SIMPAN
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: isLoading ? null : _simpanPerubahan,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromARGB(255, 243, 56, 171),
+                  backgroundColor: const Color(0xFFB8445E),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -153,7 +146,7 @@ class _EditProfilScreenState extends State<EditProfilScreen> {
         style: GoogleFonts.rubik(
           fontSize: 14,
           fontWeight: FontWeight.w600,
-          color: Colors.black87,
+          color: const Color(0xFFB8445E),
         ),
       ),
     );
@@ -164,13 +157,15 @@ class _EditProfilScreenState extends State<EditProfilScreen> {
       controller: controller,
       decoration: InputDecoration(
         hintText: hint,
+        hintStyle: const TextStyle(color: Colors.black45),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: const Color(0xFFF2B8C2),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
     );
   }

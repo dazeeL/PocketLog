@@ -13,8 +13,10 @@ class HalamanTambahPemasukan extends StatefulWidget {
 class _HalamanTambahPemasukanState extends State<HalamanTambahPemasukan> {
   final _formKey = GlobalKey<FormState>();
 
-  final Color primaryColor = const Color(0xFFFF5DA2);
-  final Color cardColor = const Color(0xFFF5F6FA);
+  // ===== WARNA PALET BARU =====
+  final Color primaryColor = const Color(0xFFE67AD2);
+  final Color cardColor = const Color(0xFFF5ECF9);
+  final Color softBg = const Color(0xFFF6ECFA);
 
   final jumlahController = TextEditingController();
   final tanggalController = TextEditingController();
@@ -31,7 +33,6 @@ class _HalamanTambahPemasukanState extends State<HalamanTambahPemasukan> {
     "Lainnya",
   ];
 
-  // ===== Supabase client =====
   final supabase = Supabase.instance.client;
 
   @override
@@ -42,7 +43,6 @@ class _HalamanTambahPemasukanState extends State<HalamanTambahPemasukan> {
     super.dispose();
   }
 
-  // ===== SIMPAN KE SUPABASE =====
   Future<void> _simpanPemasukan() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -54,7 +54,6 @@ class _HalamanTambahPemasukanState extends State<HalamanTambahPemasukan> {
       return;
     }
 
-    // Parse jumlah
     final jumlah = int.tryParse(jumlahController.text);
     if (jumlah == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -63,7 +62,6 @@ class _HalamanTambahPemasukanState extends State<HalamanTambahPemasukan> {
       return;
     }
 
-    // Parse tanggal
     DateTime tanggal;
     try {
       final parts = tanggalController.text.split('/');
@@ -80,30 +78,30 @@ class _HalamanTambahPemasukanState extends State<HalamanTambahPemasukan> {
     }
 
     try {
-  await supabase.from('pemasukan').insert({
-    'user_id': user.id,
-    'jumlah': jumlah,
-    'tanggal': tanggal.toIso8601String(),
-    'kategori': selectedKategori ?? 'Lainnya',
-    'keterangan': keteranganController.text,
-  });
+      await supabase.from('pemasukan').insert({
+        'user_id': user.id,
+        'jumlah': jumlah,
+        'tanggal': tanggal.toIso8601String(),
+        'kategori': selectedKategori ?? 'Lainnya',
+        'keterangan': keteranganController.text,
+      });
 
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(content: Text("Pemasukan berhasil disimpan")),
-  );
-  Navigator.pop(context, true);
-} catch (e) {
-  debugPrint("Insert pemasukan error: $e");
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(content: Text("Gagal menyimpan pemasukan")),
-  );
-}
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Pemasukan berhasil disimpan")),
+      );
+      Navigator.pop(context, true);
+    } catch (e) {
+      debugPrint("Insert pemasukan error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Gagal menyimpan pemasukan")),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: softBg,
       appBar: AppBar(
         backgroundColor: primaryColor,
         elevation: 0,
@@ -134,16 +132,21 @@ class _HalamanTambahPemasukanState extends State<HalamanTambahPemasukan> {
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   prefixText: "Rp ",
                   validator: (value) =>
-                      (value == null || value.isEmpty) ? "Jumlah uang wajib diisi" : null,
+                      (value == null || value.isEmpty)
+                          ? "Jumlah uang wajib diisi"
+                          : null,
                 ),
                 const SizedBox(height: 16),
+
                 _label("Tanggal"),
                 _inputField(
                   controller: tanggalController,
                   hint: "dd/mm/yyyy",
                   readOnly: true,
                   validator: (value) =>
-                      (value == null || value.isEmpty) ? "Tanggal wajib diisi" : null,
+                      (value == null || value.isEmpty)
+                          ? "Tanggal wajib diisi"
+                          : null,
                   onTap: () async {
                     final date = await showDatePicker(
                       context: context,
@@ -158,14 +161,20 @@ class _HalamanTambahPemasukanState extends State<HalamanTambahPemasukan> {
                   },
                 ),
                 const SizedBox(height: 16),
+
                 _label("Kategori"),
                 DropdownButtonFormField<String>(
                   value: selectedKategori,
                   items: kategoriList
-                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                      .map((e) => DropdownMenuItem(
+                            value: e,
+                            child: Text(e),
+                          ))
                       .toList(),
-                  onChanged: (value) => setState(() => selectedKategori = value),
-                  validator: (value) => value == null ? "Kategori wajib dipilih" : null,
+                  onChanged: (value) =>
+                      setState(() => selectedKategori = value),
+                  validator: (value) =>
+                      value == null ? "Kategori wajib dipilih" : null,
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.white,
@@ -176,12 +185,14 @@ class _HalamanTambahPemasukanState extends State<HalamanTambahPemasukan> {
                   ),
                 ),
                 const SizedBox(height: 16),
+
                 _label("Keterangan"),
                 _inputField(
                   controller: keteranganController,
                   hint: "Contoh: Gaji / Bonus / dll",
                 ),
                 const SizedBox(height: 30),
+
                 Row(
                   children: [
                     Expanded(

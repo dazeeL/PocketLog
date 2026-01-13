@@ -6,7 +6,8 @@ class HalamanTambahPengingat extends StatefulWidget {
   const HalamanTambahPengingat({super.key});
 
   @override
-  State<HalamanTambahPengingat> createState() => _HalamanTambahPengingatState();
+  State<HalamanTambahPengingat> createState() =>
+      _HalamanTambahPengingatState();
 }
 
 class _HalamanTambahPengingatState extends State<HalamanTambahPengingat> {
@@ -15,9 +16,10 @@ class _HalamanTambahPengingatState extends State<HalamanTambahPengingat> {
   final TextEditingController jumlahController = TextEditingController();
   DateTime? selectedDate;
 
-  final Color primaryColor = const Color(0xFFFF5DA2);
-  final Color bgColor = const Color(0xFFFFF7FB);
-  final Color fieldColor = const Color(0xFFFFEEF6);
+  // ===== WARNA PALET BARU =====
+  final Color primaryColor = const Color(0xFFE67AD2);
+  final Color bgColor = const Color(0xFFF6ECFA);
+  final Color fieldColor = const Color(0xFFF9F0FB);
 
   Future<void> pilihTanggal() async {
     final picked = await showDatePicker(
@@ -32,7 +34,9 @@ class _HalamanTambahPengingatState extends State<HalamanTambahPengingat> {
   Future<void> _simpanPengingat() async {
     final user = supabase.auth.currentUser;
     if (user == null) return;
-    if (namaController.text.isEmpty || jumlahController.text.isEmpty || selectedDate == null) return;
+    if (namaController.text.isEmpty ||
+        jumlahController.text.isEmpty ||
+        selectedDate == null) return;
 
     try {
       await supabase.from('pengingat').insert({
@@ -43,7 +47,7 @@ class _HalamanTambahPengingatState extends State<HalamanTambahPengingat> {
         'is_done': false,
       });
 
-      Navigator.pop(context, true); // kirim signal reload
+      Navigator.pop(context, true);
     } catch (e) {
       debugPrint("Error tambah pengingat: $e");
     }
@@ -67,9 +71,9 @@ class _HalamanTambahPengingatState extends State<HalamanTambahPengingat> {
             borderRadius: BorderRadius.circular(22),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.08),
-                blurRadius: 18,
-                offset: const Offset(0, 8),
+                color: primaryColor.withOpacity(0.15),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
@@ -78,8 +82,12 @@ class _HalamanTambahPengingatState extends State<HalamanTambahPengingat> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _label("Nama Tagihan"),
-              _textField(controller: namaController, hint: "Contoh: Listrik, Internet"),
+              _textField(
+                controller: namaController,
+                hint: "Contoh: Listrik, Internet",
+              ),
               const SizedBox(height: 16),
+
               _label("Jumlah Uang"),
               TextField(
                 controller: jumlahController,
@@ -98,11 +106,13 @@ class _HalamanTambahPengingatState extends State<HalamanTambahPengingat> {
                 ),
               ),
               const SizedBox(height: 16),
+
               _label("Tanggal"),
               InkWell(
                 onTap: pilihTanggal,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                   decoration: BoxDecoration(
                     color: fieldColor,
                     borderRadius: BorderRadius.circular(14),
@@ -116,12 +126,17 @@ class _HalamanTambahPengingatState extends State<HalamanTambahPengingat> {
                             : "${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}",
                         style: const TextStyle(fontSize: 15),
                       ),
-                      Icon(Icons.calendar_today, size: 20, color: primaryColor),
+                      Icon(
+                        Icons.calendar_today,
+                        size: 20,
+                        color: primaryColor,
+                      ),
                     ],
                   ),
                 ),
               ),
               const SizedBox(height: 28),
+
               Row(
                 children: [
                   Expanded(
@@ -129,12 +144,18 @@ class _HalamanTambahPengingatState extends State<HalamanTambahPengingat> {
                       onPressed: _simpanPengingat,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryColor,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
                       child: const Text(
                         "Simpan",
-                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
@@ -143,11 +164,20 @@ class _HalamanTambahPengingatState extends State<HalamanTambahPengingat> {
                     child: OutlinedButton(
                       onPressed: () => Navigator.pop(context),
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 14),
                         side: BorderSide(color: primaryColor),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
-                      child: Text("Batal", style: TextStyle(color: primaryColor, fontWeight: FontWeight.w600)),
+                      child: Text(
+                        "Batal",
+                        style: TextStyle(
+                          color: primaryColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -162,11 +192,17 @@ class _HalamanTambahPengingatState extends State<HalamanTambahPengingat> {
   Widget _label(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
-      child: Text(text, style: const TextStyle(fontWeight: FontWeight.w600)),
+      child: Text(
+        text,
+        style: const TextStyle(fontWeight: FontWeight.w600),
+      ),
     );
   }
 
-  Widget _textField({required TextEditingController controller, required String hint}) {
+  Widget _textField({
+    required TextEditingController controller,
+    required String hint,
+  }) {
     return TextField(
       controller: controller,
       decoration: InputDecoration(

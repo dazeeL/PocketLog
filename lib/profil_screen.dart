@@ -15,13 +15,20 @@ class ProfilScreen extends StatefulWidget {
 
 class _ProfilScreenState extends State<ProfilScreen> {
   final supabase = Supabase.instance.client;
-  final picker = ImagePicker();
+  final ImagePicker picker = ImagePicker();
 
   String nama = "";
   String username = "";
   String email = "";
   String? avatarUrl;
+
   bool isLoading = true;
+  bool isUploading = false;
+
+  // ===== PALET WARNA =====
+  final Color primaryPink = const Color(0xFFF48FB1);
+  final Color softBg = const Color(0xFFFFFBFD);
+  final Color cardBg = Colors.white;
 
   @override
   void initState() {
@@ -29,7 +36,6 @@ class _ProfilScreenState extends State<ProfilScreen> {
     _loadProfile();
   }
 
-  // ===== LOAD PROFILE =====
   Future<void> _loadProfile() async {
     try {
       final user = supabase.auth.currentUser;
@@ -49,57 +55,69 @@ class _ProfilScreenState extends State<ProfilScreen> {
         isLoading = false;
       });
     } catch (e) {
-      debugPrint("Error load profile: $e");
+      debugPrint("Load profile error: $e");
       setState(() => isLoading = false);
     }
   }
 
   Future<void> _pickAvatar() async {
-  final user = supabase.auth.currentUser;
-  if (user == null) return;
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
 
-  // Pilih file dari galeri
-  final picked = await picker.pickImage(
-    source: ImageSource.gallery,
-    imageQuality: 70,
-  );
-
-  if (picked == null) return;
-
-  final file = File(picked.path);
-  final filePath = '${user.id}/${DateTime.now().millisecondsSinceEpoch}.jpg';
-
-  try {
-    // Upload ke Supabase Storage
-    await supabase.storage.from('avatars').upload(
-      filePath,
-      file,
-      fileOptions: const FileOptions(upsert: true),
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 75,
     );
 
-    // Ambil public URL
-    final publicUrl = supabase.storage.from('avatars').getPublicUrl(filePath);
+    if (pickedFile == null) return;
 
-    // Update profiles.avatar_url
-    final response = await supabase
-        .from('profiles')
-        .update({'avatar_url': publicUrl})
-        .eq('id', user.id);
+    setState(() => isUploading = true);
 
-    if (response.error != null) {
-      print("Error updating profile: ${response.error!.message}");
-      return;
+    final filePath = '${user.id}/avatar.jpg';
+
+    try {
+      final bytes = await pickedFile.readAsBytes();
+
+      await supabase.storage.from('avatars').uploadBinary(
+        filePath,
+        bytes,
+        fileOptions: const FileOptions(
+          upsert: true,
+          contentType: 'image/jpeg',
+        ),
+      );
+
+      final publicUrl =
+          supabase.storage.from('avatars').getPublicUrl(filePath);
+
+      await supabase
+          .from('profiles')
+          .update({'avatar_url': publicUrl})
+          .eq('id', user.id);
+
+      setState(() => avatarUrl = publicUrl);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Avatar berhasil diperbarui"),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint("Upload avatar error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Gagal upload avatar"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() => isUploading = false);
     }
-
-    // Update UI
-    setState(() => avatarUrl = publicUrl);
-  } catch (e) {
-    print("Upload error: $e");
   }
-}
 
-
-  // ===== LOGOUT =====
   Future<void> _logout() async {
     await supabase.auth.signOut();
     Navigator.pushReplacement(
@@ -111,7 +129,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6FA),
+      backgroundColor: softBg,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -156,9 +174,9 @@ class _ProfilScreenState extends State<ProfilScreen> {
               children: [
                 Container(
                   height: 230,
-                  decoration: const BoxDecoration(
-                    color: Color.fromARGB(255, 243, 56, 171),
-                    borderRadius: BorderRadius.vertical(
+                  decoration: BoxDecoration(
+                    color: primaryPink,
+                    borderRadius: const BorderRadius.vertical(
                       bottom: Radius.circular(30),
                     ),
                   ),
@@ -170,21 +188,25 @@ class _ProfilScreenState extends State<ProfilScreen> {
 
                       // ===== AVATAR =====
                       GestureDetector(
-                        onTap: _pickAvatar,
+                        onTap: isUploading ? null : _pickAvatar,
                         child: Stack(
+                          alignment: Alignment.center,
                           children: [
                             CircleAvatar(
-  radius: 60,
-  backgroundColor: Colors.white,
-  backgroundImage: avatarUrl != null && avatarUrl!.isNotEmpty
-      ? NetworkImage(avatarUrl!)
-      : null,
-  child: avatarUrl == null || avatarUrl!.isEmpty
-      ? const Icon(Icons.person, size: 60, color: Colors.grey)
-      : null,
-),
-
-
+                              radius: 60,
+                              backgroundColor: Colors.white,
+                              backgroundImage:
+                                  (avatarUrl != null && avatarUrl!.isNotEmpty)
+                                      ? NetworkImage(avatarUrl!)
+                                      : null,
+                              child: (avatarUrl == null ||
+                                      avatarUrl!.isEmpty)
+                                  ? const Icon(Icons.person,
+                                      size: 60, color: Colors.grey)
+                                  : null,
+                            ),
+                            if (isUploading)
+                              const CircularProgressIndicator(),
                             Positioned(
                               bottom: 5,
                               right: 5,
@@ -194,8 +216,11 @@ class _ProfilScreenState extends State<ProfilScreen> {
                                   color: Colors.white,
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(Icons.camera_alt,
-                                    size: 20, color: Color(0xFF002E9D)),
+                                child: Icon(
+                                  Icons.camera_alt,
+                                  size: 20,
+                                  color: primaryPink,
+                                ),
                               ),
                             ),
                           ],
@@ -234,9 +259,9 @@ class _ProfilScreenState extends State<ProfilScreen> {
                                 icon: const Icon(Icons.logout),
                                 label: const Text("Logout"),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red,
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 14),
+                                  backgroundColor: const Color(0xFFA65C73),
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 14),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(16),
                                   ),
@@ -254,49 +279,42 @@ class _ProfilScreenState extends State<ProfilScreen> {
     );
   }
 
- Widget profilCard(String title, String value) {
-  return Card(
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(16),
-    ),
-    elevation: 3,
-    margin: const EdgeInsets.symmetric(vertical: 8),
-    child: Padding(
-      padding: const EdgeInsets.all(18),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.grey,
-                    fontSize: 13,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Icon(
-            Icons.arrow_forward_ios,
-            color: Colors.grey,
-            size: 16,
-          ),
-        ],
+  Widget profilCard(String title, String value) {
+    return Card(
+      color: cardBg,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
       ),
-    ),
-  );
-}
+      elevation: 3,
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style:
+                          const TextStyle(color: Colors.grey, fontSize: 13)),
+                  const SizedBox(height: 6),
+                  Text(
+                    value,
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios,
+                color: Colors.grey, size: 16),
+          ],
+        ),
+      ),
+    );
+  }
 }
